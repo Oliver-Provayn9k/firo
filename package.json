@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
+    "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
+    "cookie": "^1.0.2",
     "dotenv": "^16.4.7",
     "next": "^15.2.3",
     "node-fetch": "^3.3.2",
@@ -48,4 +50,3 @@
   "author": "",
   "license": "ISC"
 }
-

@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { serialize } from 'cookie';
 
 export async function POST(request) {
   try {
     const body = await request.json();
     const { email, password, recaptchaToken } = body;
 
-    // Kontrola vstupov
+    // Validácia vstupov
     if (!email || !password || !recaptchaToken) {
       return NextResponse.json({ message: 'Missing credentials.' }, { status: 400 });
     }
@@ -24,36 +25,25 @@ export async function POST(request) {
       return NextResponse.json({ message: 'reCAPTCHA failed.' }, { status: 400 });
     }
 
-    // Vyhladanie pouzivatela podla emailu
-    console.log('Finding user by email...');
+    // Vyhľadanie používateľa
+    console.log('EMAIL z formulára:', email);
     const user = await prisma.user.findUnique({ where: { email } });
+    console.log('Používateľ z databázy:', user);
+
     if (!user) {
       console.log('User not found:', email);
       return NextResponse.json({ message: 'Invalid credentials.' }, { status: 401 });
     }
 
     // Porovnanie hesla
-    console.log('Comparing passwords...');
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       console.log('Invalid password for user:', email);
       return NextResponse.json({ message: 'Invalid credentials.' }, { status: 401 });
     }
 
-    // Nastavenie autentifikacneho cookie
-    console.log('Setting authentication cookies...');
-
-    const response = NextResponse.json({ success: true });
-
-    response.cookies.set('auth', 'true', {
-      path: '/',
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24, // 1 den
-    });
-
-    response.cookies.set('userId', String(user.id), {
+    // Nastavenie cookies pomocou serialize
+    const authCookie = serialize('auth', 'true', {
       path: '/',
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -61,10 +51,26 @@ export async function POST(request) {
       maxAge: 60 * 60 * 24,
     });
 
+    const emailCookie = serialize('email', user.email, {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24,
+    });
+
+    const response = new NextResponse(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: {
+        'Set-Cookie': [authCookie, emailCookie],
+        'Content-Type': 'application/json',
+      },
+    });
+
     return response;
 
   } catch (error) {
-    console.error('Error processing request:', error);
+    console.error('Error processing login:', error);
     return NextResponse.json({ message: 'Internal server error.' }, { status: 500 });
   }
 }
