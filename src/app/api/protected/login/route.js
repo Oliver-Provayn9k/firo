@@ -5,25 +5,26 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { email, password, recaptchaToken } = body;
+    const { email, password, recaptchaToken } = await request.json();
 
     if (!email || !password || !recaptchaToken) {
       return NextResponse.json({ message: 'Missing credentials.' }, { status: 400 });
     }
 
     // ✅ Verify reCAPTCHA
-    const verifyRes = await fetch(
-      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
-      { method: 'POST' }
-    );
+    const verifyRes = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
+    });
+
     const verifyData = await verifyRes.json();
 
     if (!verifyData.success) {
       return NextResponse.json({ message: 'reCAPTCHA failed.' }, { status: 400 });
     }
 
-    // ✅ Find user by email
+    // ✅ Find user
     const user = await prisma.user.findUnique({
       where: { email },
       select: { id: true, name: true, email: true, password: true },
@@ -33,13 +34,12 @@ export async function POST(request) {
       return NextResponse.json({ message: 'Invalid credentials.' }, { status: 401 });
     }
 
-    // ✅ Check password (bcrypt)
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return NextResponse.json({ message: 'Invalid credentials.' }, { status: 401 });
     }
 
-    // ✅ Create response and set cookie on it
+    // ✅ Set cookie
     const response = NextResponse.json({
       success: true,
       user: {
@@ -49,7 +49,7 @@ export async function POST(request) {
       },
     });
 
-    response.cookies.set('userId', user.id.toString(), {
+    cookies().set('userId', user.id.toString(), {
       httpOnly: true,
       path: '/',
       sameSite: 'lax',
@@ -58,10 +58,10 @@ export async function POST(request) {
     });
 
     return response;
-
   } catch (error) {
-    console.error('Error processing login:', error);
+    console.error('Error in /api/protected/login:', error);
     return NextResponse.json({ message: 'Internal server error.' }, { status: 500 });
   }
 }
+
 
