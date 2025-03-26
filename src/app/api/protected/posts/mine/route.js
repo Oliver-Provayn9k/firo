@@ -1,27 +1,26 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { cookies } from 'next/headers';
 
-export async function GET(request) {
-  const authCookie = request.cookies.get('auth')?.value;
-  const userEmail = request.cookies.get('email')?.value;
+export async function GET() {
+  const cookieStore = await cookies(); // 🛠 await je potrebné
+  const authCookie = cookieStore.get('auth')?.value;
+  const userId = cookieStore.get('userId')?.value;
 
-  if (authCookie !== 'true' || !userEmail) {
+  if (authCookie !== 'true' || !userId) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: userEmail },
-    select: { id: true },
-  });
-
-  if (!user) {
-    return NextResponse.json({ message: 'User not found' }, { status: 404 });
-  }
-
   const posts = await prisma.post.findMany({
-    where: { userId: user.id },
+    where: { userId: parseInt(userId, 10) },
     orderBy: { id: 'desc' },
+    select: {
+      id: true,
+      title: true,
+    },
   });
 
-  return NextResponse.json(posts);
+  return NextResponse.json({ posts });
 }
+
+

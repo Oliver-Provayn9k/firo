@@ -1,0 +1,7 @@
+{
+  "/api/protected/me/route": "app/api/protected/me/route.js",
+  "/api/protected/posts/mine/route": "app/api/protected/posts/mine/route.js",
+  "/api/protected/posts/create/route": "app/api/protected/posts/create/route.js",
+  "/protected/page": "app/protected/page.js",
+  "/protected/profile/page": "app/protected/profile/page.js"
+}

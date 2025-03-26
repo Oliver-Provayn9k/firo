@@ -1,40 +1,12 @@
-@import './output.css';
+/* src/app/globals.css */
+@import "tailwindcss";
 
 /* Tu môžeš pridať vlastné globálne štýly */
 body {
   font-family: 'Inter', sans-serif;
 }
+
 ::placeholder {
   color: white;
   opacity: 1; /* Full visibility */
 }
-/* Oprava pre tlačidlá */
-button,
-[type='button'],
-[type='reset'],
-[type='submit'] {
-  appearance: button;
-  -webkit-appearance: button;
-  background-color: transparent;
-  background-image: none;
-}
-
-/* Oprava pre vyhľadávacie pole */
-[type='search'] {
-  appearance: textfield;
-  -webkit-appearance: textfield;
-  outline-offset: -2px;
-}
-
-/* Oprava pre obrázky a médiá */
-img,
-svg,
-video,
-canvas,
-audio,
-iframe,
-embed,
-object {
-  display: block;
-}
-

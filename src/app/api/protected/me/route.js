@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { cookies } from 'next/headers';
 
-export async function GET(request) {
-  const authCookie = request.cookies.get('auth')?.value;
-  const userEmail = request.cookies.get('email')?.value;
+export async function GET() {
+  const cookieStore = cookies(); // ❌ žiadne await
+  const userId = cookieStore.get('userId')?.value;
 
-  if (authCookie !== 'true' || !userEmail) {
+  if (!userId) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   const user = await prisma.user.findUnique({
-    where: { email: userEmail },
+    where: { id: parseInt(userId, 10) },
     select: { id: true, name: true },
   });
 
@@ -20,3 +21,9 @@ export async function GET(request) {
 
   return NextResponse.json(user);
 }
+
+export async function POST() {
+  return NextResponse.json({ message: 'Method Not Allowed' }, { status: 405 });
+}
+
+

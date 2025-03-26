@@ -20,7 +20,7 @@
     ],
     "incremental": true,
     "esModuleInterop": true,
-    "jsx": "preserve",
+    "jsx": "preserve", // zmena tu
     "plugins": [
       {
         "name": "next"

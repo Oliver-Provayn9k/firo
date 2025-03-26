@@ -32,12 +32,24 @@ export default function ProtectedLoginPage() {
 
       const data = await res.json();
 
-      if (!res.ok) {
+      if (!res.ok || !data.success || !data.user) {
         setError(data.message || 'Login failed.');
       } else {
-        router.push('/protected');
+        // ✅ Ulož do localStorage
+        localStorage.setItem('user', JSON.stringify({
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+        }));
+
+        // ✅ Oznám zmenu cez Event
+        window.dispatchEvent(new Event('userChanged'));
+
+        // ✅ Presmeruj na profil
+        router.push('/protected/profile');
       }
     } catch (err) {
+      console.error(err);
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
@@ -80,7 +92,5 @@ export default function ProtectedLoginPage() {
     </div>
   );
 }
-
-
 
 

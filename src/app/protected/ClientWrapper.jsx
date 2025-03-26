@@ -10,16 +10,15 @@ export default function ClientWrapper({ posts, totalPages }) {
 
   useEffect(() => {
     const isAuth = document.cookie.includes('auth=true');
-
     if (!isAuth) {
       router.push('/access');
     } else {
       setIsAuthenticated(true);
     }
-  }, [router]); // ✅ PRIDANÝ router ako závislosť
+  }, [router]);
 
   if (isAuthenticated === null) {
-    return null; // alebo loading spinner ak chceš
+    return null; // alebo spinner
   }
 
   const logout = async () => {
@@ -28,7 +27,6 @@ export default function ClientWrapper({ posts, totalPages }) {
     } catch (err) {
       console.error('Logout failed:', err);
     }
-
     document.cookie = 'auth=; Max-Age=0; path=/;';
     router.push('/access');
   };
@@ -37,6 +35,7 @@ export default function ClientWrapper({ posts, totalPages }) {
     <main className="bg-black text-white min-h-screen">
       <div className="max-w-2xl mx-auto p-4">
         <h1 className="text-3xl font-bold mb-6 text-center">Blog</h1>
+
         <button
           onClick={logout}
           className="mb-6 bg-red-500 text-white px-4 py-2 rounded"
@@ -53,5 +52,3 @@ export default function ClientWrapper({ posts, totalPages }) {
     </main>
   );
 }
-
-

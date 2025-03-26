@@ -1,3 +1,4 @@
+// 👇 na začiatok
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -16,6 +17,10 @@ export default function ProfilePage() {
   useEffect(() => {
     async function fetchProfile() {
       const res = await fetch('/api/protected/me');
+      if (!res.ok) {
+        router.push('/protected/login');
+        return;
+      }
       const data = await res.json();
       setName(data.name);
       setUserId(data.id);
@@ -24,45 +29,85 @@ export default function ProfilePage() {
     async function fetchMyPosts() {
       const res = await fetch('/api/protected/posts/mine');
       const data = await res.json();
-      setPosts(data);
+      // 👇 ak `tags` je JSON string, rozparsujeme
+      const postsWithParsedTags = (data.posts || []).map(post => ({
+        ...post,
+        tags: safeParseJSON(post.tags),
+      }));
+      setPosts(postsWithParsedTags);
     }
 
     fetchProfile();
     fetchMyPosts();
-  }, []);
+  }, [router]);
+
+  const safeParseJSON = (json) => {
+    try {
+      const parsed = JSON.parse(json);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage(null);
 
-    const res = await fetch('/api/protected/posts/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title,
-        body,
-        tags: tags.split(',').map(tag => tag.trim()), // rozdelenie tagov
-      }),
-    });
+    try {
+      const tagsArray = tags
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
 
-    const data = await res.json();
+      const res = await fetch('/api/protected/posts/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          body,
+          tags: tagsArray,
+        }),
+      });
 
-    if (!res.ok) {
-      setMessage(data.message || 'Failed to create post.');
-      return;
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.message || 'Failed to create post.');
+        return;
+      }
+
+      setMessage('Post created successfully!');
+      setTitle('');
+      setBody('');
+      setTags('');
+
+      setPosts(prev => [
+        {
+          ...data,
+          tags: safeParseJSON(data.tags),
+        },
+        ...prev,
+      ]);
+    } catch (error) {
+      console.error('Submit error:', error);
+      setMessage('Unexpected error');
     }
-
-    setMessage('Post created successfully!');
-    setTitle('');
-    setBody('');
-    setTags('');
-    setPosts(prev => [...prev, data]); // pridá nový post lokálne
   };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center p-6">
-      <h1 className="text-4xl font-bold mb-4">Hure, {name}</h1>
+      <div className="w-full max-w-xl flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Hi, {name}</h1>
+        <button
+          onClick={() => router.push('/protected')}
+          className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 text-sm"
+        >
+          Blog
+        </button>
+      </div>
 
-      <form onSubmit={handleSubmit} className="w-full max-w-xl space-y-4 mb-8">
+      <form onSubmit={handleSubmit} className="w-full max-w-xl space-y-4 mb-10">
         <input
           type="text"
           placeholder="Title"
@@ -88,7 +133,7 @@ export default function ProfilePage() {
           required
         />
 
-        {message && <p className="text-center text-lg text-green-400">{message}</p>}
+        {message && <p className="text-center text-green-400">{message}</p>}
 
         <button
           type="submit"
@@ -100,17 +145,37 @@ export default function ProfilePage() {
 
       <div className="w-full max-w-xl">
         <h2 className="text-2xl font-semibold mb-4">Your Articles</h2>
-        <ul className="space-y-2">
-          {posts.map((post) => (
-            <li key={post.id}>
-              <a href={`/protected/post/${post.id}`} className="text-orange-400 underline hover:text-orange-200">
-                {post.title}
-              </a>
-            </li>
-          ))}
+        <ul className="space-y-4">
+          {Array.isArray(posts) && posts.length > 0 ? (
+            posts.map((post) => (
+              <li key={post.id} className="bg-gray-900 p-4 rounded-lg">
+                <a
+                  href={`/protected/post/${post.id}`}
+                  className="text-orange-400 underline hover:text-orange-200 text-xl"
+                >
+                  {post.title}
+                </a>
+                {post.tags?.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {post.tags.map((tag, i) => (
+                      <span
+                        key={i}
+                        className="bg-orange-700 text-white px-2 py-1 rounded-full text-sm"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </li>
+            ))
+          ) : (
+            <li className="text-gray-400 italic">No posts yet.</li>
+          )}
         </ul>
       </div>
     </div>
   );
 }
+
 

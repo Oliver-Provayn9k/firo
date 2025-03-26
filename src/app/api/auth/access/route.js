@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 export async function POST(request) {
   const { password } = await request.json();
@@ -6,11 +7,9 @@ export async function POST(request) {
   const isValid = password === process.env.ADMIN_PASSWORD;
 
   if (isValid) {
-    const response = new NextResponse(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const response = NextResponse.json({ success: true });
 
+    // správne použitie cookies().set na odpoveď
     response.cookies.set('auth', 'true', {
       path: '/',
       sameSite: 'strict',
@@ -20,8 +19,7 @@ export async function POST(request) {
     return response;
   }
 
-  return new NextResponse(JSON.stringify({ success: false }), {
-    status: 401,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return NextResponse.json({ success: false }, { status: 401 });
 }
+
+

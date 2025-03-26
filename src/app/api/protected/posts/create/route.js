@@ -1,41 +1,41 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { cookies } from 'next/headers';
 
 export async function POST(request) {
   try {
-    const authCookie = request.cookies.get('auth')?.value;
-    const userEmail = request.cookies.get('email')?.value;
+    const cookieStore = await cookies();
+    const userId = cookieStore.get('userId')?.value;
 
-    if (authCookie !== 'true' || !userEmail) {
+    if (!userId) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: userEmail },
-      select: { id: true },
-    });
+    const body = await request.json();
+    const { title, body: content, tags } = body;
 
-    if (!user) {
-      return NextResponse.json({ message: 'User not found' }, { status: 404 });
+    if (!title || !content || !tags) {
+      return NextResponse.json({ message: 'Missing fields' }, { status: 400 });
     }
 
-    const { title, body, tags } = await request.json();
+    const tagsJson = Array.isArray(tags) ? JSON.stringify(tags) : tags;
 
     const newPost = await prisma.post.create({
       data: {
         title,
-        body,
-        tags: Array.isArray(tags) ? tags : [tags],
+        body: content,
+        tags: tagsJson,
         likes: 0,
         dislikes: 0,
         views: 0,
-        userId: user.id,
+        userId: parseInt(userId, 10), // nezabudni parseInt
       },
     });
 
     return NextResponse.json(newPost);
   } catch (error) {
-    console.error('Create post error:', error);
-    return NextResponse.json({ message: 'Server error' }, { status: 500 });
+    console.error('Error creating post:', error);
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }
+

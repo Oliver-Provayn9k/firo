@@ -1,16 +1,11 @@
-import "./globals.css";
+import "../app/globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
-import Image from "next/image"; // ⬅️ nový import
+import Image from "next/image";
+import ClientOnlyWrapper from "../components/ClientOnlyWrapper"; // ✅ správne
+// ✅ NEimportuj znova UserMenu, ten je už v ClientOnlyWrapper
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata = {
   title: "Oliver Provazník",
@@ -24,24 +19,23 @@ export const metadata = {
       { url: "/android-chrome-512x512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: "/apple-touch-icon.png",
-    other: [
-      {
-        rel: "manifest",
-        url: "/site.webmanifest",
-      },
-    ],
+    other: [{ rel: "manifest", url: "/site.webmanifest" }],
   },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-    >
-      <body className="bg-black text-white min-h-screen flex flex-col items-center justify-center">
-        <main className="w-full max-w-3xl p-6">{children}</main>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className="bg-black text-white min-h-screen flex flex-col">
+        {/* ✅ Tu je UserMenu vpravo hore */}
+        <ClientOnlyWrapper />
 
+        {/* ✅ Hlavný obsah s centrálnym zarovnaním */}
+        <main className="flex flex-col items-center justify-start w-full max-w-3xl p-6 mx-auto pt-20">
+          {children}
+        </main>
+
+        {/* ✅ Avatar vľavo dole */}
         <div className="fixed bottom-4 left-4">
           <a href="mailto:oliver.provaznik@gmail.com" className="inline-block">
             <Image
@@ -57,5 +51,14 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+
+
+
+
+
+
+
+
+
 
 

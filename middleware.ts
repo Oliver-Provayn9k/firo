@@ -4,10 +4,11 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const auth = request.cookies.get('auth')?.value;
+  const userId = request.cookies.get('userId')?.value;
 
-  console.log('🔐 middleware:', pathname, '| auth:', auth);
+  console.log('🔐 middleware:', pathname, '| auth:', auth, '| userId:', userId);
 
-  // ✅ Verejné cesty
+  // ✅ Verejné cesty (ktoré nevyžadujú prihlásenie)
   const publicPaths = [
     '/access',
     '/api/auth/access',
@@ -25,21 +26,29 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/access', request.url));
   }
 
-  // ✅ Ak ide o verejnú cestu → pusti ďalej
+  // ✅ Verejná cesta = pusti ďalej
   if (isPublic) {
     return NextResponse.next();
   }
 
-  // ❌ Ak nie je prihlásený → presmeruj na /access
+  // 🔐 Chránené vnútorné route: /protected/**
+  if (pathname.startsWith('/protected')) {
+    if (!userId) {
+      return NextResponse.redirect(new URL('/access', request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // 🔐 Všetko ostatné chráni cookie auth=true
   if (!auth || auth !== 'true') {
     return NextResponse.redirect(new URL('/access', request.url));
   }
 
-  // ✅ Inak povoliť prístup
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/(?!_next|favicon.ico).*'],
+  matcher: ['/(?!_next|favicon.ico).*'], // všetko okrem statických súborov
 };
+
 

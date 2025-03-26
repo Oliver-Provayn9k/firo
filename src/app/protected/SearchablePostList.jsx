@@ -13,7 +13,7 @@ export default function SearchablePostList({ initialPosts, initialTotalPages, in
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const res = await fetch(`/api/posts?q=${encodeURIComponent(query)}&page=${page}&limit=${pageSize}`);
+        const res = await fetch(`/api/protected/posts/list?q=${encodeURIComponent(query)}&page=${page}&limit=${pageSize}`);
         if (!res.ok) {
           console.error("Chyba pri načítaní článkov");
           return;
