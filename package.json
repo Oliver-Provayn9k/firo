@@ -10,6 +10,9 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@babel/core": "^7.0.0-0",
     "@prisma/client": "^6.5.0",
@@ -39,9 +42,6 @@
     "eslint": "^9.23.0",
     "prisma": "^6.5.0",
     "typescript": "^5.8.2"
-  },
-  "engines": {
-    "node": ">=20"
   },
   "description": "This is a Next.js project bootstrapped with create-next-app.",
   "main": "index.js",
