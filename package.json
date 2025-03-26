@@ -40,9 +40,13 @@
     "prisma": "^6.5.0",
     "typescript": "^5.8.2"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "description": "This is a Next.js project bootstrapped with create-next-app.",
   "main": "index.js",
   "keywords": [],
   "author": "",
   "license": "ISC"
 }
+
